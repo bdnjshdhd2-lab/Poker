@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cs">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Poker Night Leaderboard</title>
+<title>Poker – žebříček</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap">
 <style>
 :root{--bg:#f3efe2;--card:#fffdf6;--ink:#1b2a22;--mute:#5d6b62;--line:#d9d3bd;--gold:#8a6a12;--pos:#1f6b3f;--neg:#a63a2b;--chip:#1f4d3a;--chipink:#f3efe2;
@@ -13,109 +13,164 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:760px;margin:0 auto;padding:28px 16px 48px}
-h1,h2{font-family:Fraunces,Georgia,"Times New Roman",serif;margin:0}
-h1{font-size:clamp(2rem,7vw,3rem);font-weight:800;line-height:1.05;letter-spacing:-.01em}
-h2{font-size:1.35rem;font-weight:600;margin:40px 0 12px}
-.sub{color:var(--mute);margin:8px 0 0}
-.stats{display:flex;gap:24px;flex-wrap:wrap;margin:22px 0 0}
-.stats b{font-family:Fraunces,Georgia,serif;font-size:1.6rem;font-weight:800;display:block;line-height:1.1}
-.stats span{color:var(--mute);font-size:.9rem}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,.serif{font-family:Fraunces,Georgia,"Times New Roman",serif}
+h1{font-size:clamp(1.8rem,6vw,2.6rem);font-weight:800;line-height:1.1;margin:0}
+h2{font-size:1.3rem;font-weight:600;margin:32px 0 12px}
+#splash{position:fixed;inset:0;z-index:9;width:100%;border:0;background:var(--bg);color:var(--ink);cursor:pointer;display:grid;place-content:center;gap:14px;text-align:center;font:inherit}
+#splash .suits{font-size:1.8rem;letter-spacing:.5em;color:var(--gold)}
+#splash .big{font-family:Fraunces,Georgia,serif;font-weight:800;font-size:clamp(4rem,22vw,9rem);line-height:1}
+#splash .hint{color:var(--mute);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){#splash .hint{animation:none}}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;max-width:760px;margin:0 auto;padding:16px 16px 0}
+.brand{font-family:Fraunces,Georgia,serif;font-weight:800;font-size:1.2rem;text-decoration:none}
+nav{display:flex;gap:4px}
+nav a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--mute);font-weight:600}
+nav a.on{background:var(--chip);color:var(--chipink)}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+.sub{color:var(--mute);margin:6px 0 0}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:36px 0 8px}
+.slot{flex:1;max-width:200px;text-align:center;text-decoration:none;display:block}
+.pn{font-weight:700;overflow-wrap:anywhere}
+.pm{color:var(--mute);font-size:.88rem;margin-bottom:6px}
+.blk{display:grid;place-items:center;border-radius:10px 10px 0 0;background:var(--card);border:1px solid var(--line);border-bottom:0;font-family:Fraunces,Georgia,serif;font-weight:800;font-size:2.2rem}
+.s1 .blk{height:160px;background:var(--chip);color:var(--chipink);font-size:3rem}
+.s2 .blk{height:115px}.s3 .blk{height:85px}
+.stats{display:flex;gap:24px;flex-wrap:wrap;margin:28px 0 0;justify-content:center}
+.stats b,.grid b{font-family:Fraunces,Georgia,serif;font-size:1.5rem;font-weight:800;display:block;line-height:1.15}
+.stats span,.grid span{color:var(--mute);font-size:.9rem}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
-table{border-collapse:collapse;width:100%;min-width:480px}
+table{border-collapse:collapse;width:100%;min-width:460px}
 th,td{padding:12px 14px;text-align:right;white-space:nowrap}
 th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
 th{font-weight:600;font-size:.85rem;color:var(--mute);border-bottom:1px solid var(--line)}
 tbody tr+tr td{border-top:1px solid var(--line)}
-td:nth-child(2){font-weight:600}
-.chip{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;border:2px dashed var(--chipink);outline:2px solid var(--chip);background:var(--chip);color:var(--chipink);font-weight:700;font-size:.9rem}
-.chip.rest{background:transparent;color:var(--mute);border:0;outline:0;font-weight:600}
-.pos{color:var(--pos)}.neg{color:var(--neg)}
-.gold{color:var(--gold);font-weight:700}
-.night{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:12px}
-.night h3{margin:0;font-size:1.05rem}
-.night p{margin:2px 0 10px;color:var(--mute);font-size:.92rem}
-.night ol{margin:0;padding-left:1.4em}
-.night li+li{margin-top:2px}
+td a{font-weight:600}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.gold{color:var(--gold);font-weight:700}
+.night{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:10px;text-decoration:none}
+.night b{display:block}.night span{color:var(--mute);font-size:.92rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+.grid div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.back{display:inline-block;margin-bottom:14px;color:var(--mute)}
 .empty{color:var(--mute);padding:18px}
-footer{margin-top:36px;color:var(--mute);font-size:.88rem}
+footer{margin-top:32px;color:var(--mute);font-size:.88rem}
 </style>
 </head>
 <body>
-<main>
-  <h1>Poker night leaderboard</h1>
-  <p class="sub">Winner takes all. Buy-in 100 CZK.</p>
-  <div class="stats" id="stats"></div>
-
-  <h2>Standings</h2>
-  <div class="wrap">
-    <table>
-      <thead><tr><th>#</th><th>Player</th><th>Wins</th><th>Played</th><th>Won</th><th>Net</th></tr></thead>
-      <tbody id="board"></tbody>
-    </table>
-  </div>
-
-  <h2>Tournaments</h2>
-  <div id="log"></div>
-
-  <footer>Net = money won minus buy-ins. Tied placings are listed together.</footer>
-</main>
+<button id="splash" type="button"><span class="suits" aria-hidden="true">♠ ♥ ♦ ♣</span><span class="big">Poker</span><span class="hint">Klikni pro pokračování</span></button>
+<header>
+  <a class="brand" href="#/">♠ Poker</a>
+  <nav><a href="#/" id="n-home">Přehled</a><a href="#/turnaje" id="n-tur">Turnaje</a><a href="#/zebricek" id="n-zeb">Žebříček</a></nav>
+</header>
+<main id="app"></main>
 <script>
-// Add new tournaments to this list. Each placing is a list of names (several names = shared place).
+// Nový turnaj přidej na konec tohoto seznamu. Každé umístění je seznam jmen (více jmen = sdílené místo).
 var TOURNAMENTS = [
   { date: "2026-10-03", buyin: 100, results: [["Ríša"], ["Zdena"], ["Kuba", "David"]] }
 ];
 
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
-function czk(n){return n.toLocaleString("en-GB")+" CZK"}
+function kc(n){return n.toLocaleString("cs-CZ")+"\u00a0Kč"}
+function sg(n){return (n>0?"+":n<0?"\u2212":"")+kc(Math.abs(n))}
+function cl(n){return n>0?"pos":n<0?"neg":""}
+function pl(n,a,b,c){return n+"\u00a0"+(n===1?a:(n>=2&&n<=4)?b:c)}
+function dt(d){return new Date(d+"T12:00:00").toLocaleDateString("cs-CZ",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+function plink(n){return "<a href='#/hrac/"+encodeURIComponent(n)+"'>"+esc(n)+"</a>"}
 
-var stats = {};
-var totalPot = 0;
-TOURNAMENTS.forEach(function(t){
-  var players = [].concat.apply([], t.results);
-  var pot = players.length * t.buyin;
-  totalPot += pot;
-  t.pot = pot;
-  players.forEach(function(p){
-    var s = stats[p] || (stats[p] = {name:p, played:0, wins:0, won:0, spent:0});
-    s.played++; s.spent += t.buyin;
+var P = {}, totalPot = 0;
+TOURNAMENTS.forEach(function(t,i){
+  var all = [].concat.apply([], t.results);
+  t.id = i; t.n = all.length; t.pot = t.n * t.buyin; totalPot += t.pot;
+  var place = 1;
+  t.results.forEach(function(g,gi){
+    g.forEach(function(p){
+      var won = gi===0 ? t.pot/g.length : 0;
+      var s = P[p] || (P[p] = {name:p, played:0, wins:0, won:0, spent:0, best:99, log:[]});
+      s.played++; s.spent += t.buyin; s.won += won;
+      if (gi===0) s.wins++;
+      if (place < s.best) s.best = place;
+      s.log.push({t:t, place:place, net:won-t.buyin});
+    });
+    place += g.length;
   });
-  var winners = t.results[0];
-  winners.forEach(function(p){ stats[p].wins++; stats[p].won += pot / winners.length; });
 });
+var rows = Object.keys(P).map(function(k){var s=P[k]; s.net=s.won-s.spent; return s});
+rows.sort(function(a,b){return b.wins-a.wins || b.net-a.net || a.best-b.best || a.name.localeCompare(b.name,"cs")});
+rows.forEach(function(s,i){var q=rows[i-1]; s.rank=(i&&q.wins===s.wins&&q.net===s.net&&q.best===s.best)?q.rank:i+1});
+var BUYIN = TOURNAMENTS.length ? TOURNAMENTS[TOURNAMENTS.length-1].buyin : 100;
 
-var rows = Object.keys(stats).map(function(k){var s=stats[k]; s.net=s.won-s.spent; return s});
-rows.sort(function(a,b){return b.wins-a.wins || b.net-a.net || a.name.localeCompare(b.name)});
-
-var rank = 0, html = "";
-rows.forEach(function(s,i){
-  if (i===0 || s.wins!==rows[i-1].wins || s.net!==rows[i-1].net) rank = i+1;
-  var net = (s.net>0?"+":s.net<0?"\u2212":"") + czk(Math.abs(s.net));
-  html += "<tr><td><span class='chip"+(rank>1?" rest":"")+"'>"+rank+"</span></td>"+
-    "<td>"+esc(s.name)+"</td><td"+(s.wins?" class='gold'":"")+">"+s.wins+"</td><td>"+s.played+"</td>"+
-    "<td>"+czk(s.won)+"</td><td class='"+(s.net>0?"pos":s.net<0?"neg":"")+"'>"+net+"</td></tr>";
-});
-document.getElementById("board").innerHTML = html || "<tr><td class='empty' colspan='6'>No tournaments yet.</td></tr>";
-
-document.getElementById("stats").innerHTML =
-  "<div><b>"+TOURNAMENTS.length+"</b><span>tournaments</span></div>"+
-  "<div><b>"+rows.length+"</b><span>players</span></div>"+
-  "<div><b>"+czk(totalPot)+"</b><span>played for</span></div>";
-
-var places = ["1st","2nd","3rd"];
-var log = "";
-TOURNAMENTS.slice().sort(function(a,b){return a.date<b.date?1:-1}).forEach(function(t){
-  var d = new Date(t.date+"T12:00:00").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-  var n = [].concat.apply([], t.results).length;
-  log += "<div class='night'><h3>"+esc(d)+"</h3><p>"+n+" players, pot "+czk(t.pot)+"</p><ol>";
-  var pos = 1;
-  t.results.forEach(function(g){
-    log += "<li value='"+pos+"'>"+g.map(esc).join(" &amp; ")+(pos===1?" <span class='gold'>won "+czk(t.pot/g.length)+(g.length>1?" each":"")+"</span>":"")+"</li>";
-    pos += g.length;
+function slot(s,cls){
+  if(!s) return "<div class='slot "+cls+"'></div>";
+  return "<a class='slot "+cls+"' href='#/hrac/"+encodeURIComponent(s.name)+"'><div class='pn'>"+esc(s.name)+"</div><div class='pm'>"+pl(s.wins,"výhra","výhry","výher")+"</div><div class='blk'>"+s.rank+"</div></a>";
+}
+function home(){
+  if(!rows.length) return "<h1>Poker</h1><p class='empty'>Zatím žádné turnaje.</p>";
+  return "<h1>Síň slávy</h1><p class='sub'>Vítěz bere vše. Vklad na turnaj "+kc(BUYIN)+".</p>"+
+   "<div class='podium'>"+slot(rows[1],"s2")+slot(rows[0],"s1")+slot(rows[2],"s3")+"</div>"+
+   "<div class='stats'><div><b>"+TOURNAMENTS.length+"</b><span>"+(TOURNAMENTS.length===1?"turnaj":(TOURNAMENTS.length<5?"turnaje":"turnajů"))+"</span></div>"+
+   "<div><b>"+rows.length+"</b><span>"+(rows.length===1?"hráč":(rows.length<5?"hráči":"hráčů"))+"</span></div>"+
+   "<div><b>"+kc(totalPot)+"</b><span>odehráno celkem</span></div></div>";
+}
+function tournaments(){
+  var h = "<h1>Historie turnajů</h1><p class='sub'>Klikni na turnaj pro všechny detaily.</p><h2>Všechny turnaje</h2>";
+  TOURNAMENTS.slice().reverse().forEach(function(t){
+    h += "<a class='night' href='#/turnaj/"+t.id+"'><b>"+esc(dt(t.date))+"</b><span>"+pl(t.n,"hráč","hráči","hráčů")+", bank "+kc(t.pot)+". Vítěz: "+t.results[0].map(esc).join(" a ")+"</span></a>";
   });
-  log += "</ol></div>";
-});
-document.getElementById("log").innerHTML = log || "<p class='empty'>No tournaments yet.</p>";
+  return h || "<p class='empty'>Zatím žádné turnaje.</p>";
+}
+function tournament(id){
+  var t = TOURNAMENTS[id]; if(!t) return tournaments();
+  var h = "<a class='back' href='#/turnaje'>← Všechny turnaje</a><h1>"+esc(dt(t.date))+"</h1>"+
+   "<div class='grid'><div><b>"+t.n+"</b><span>hráčů</span></div><div><b>"+kc(t.buyin)+"</b><span>vklad</span></div><div><b>"+kc(t.pot)+"</b><span>bank</span></div></div>"+
+   "<h2>Výsledky</h2><div class='wrap'><table><thead><tr><th>Místo</th><th>Hráč</th><th>Výsledek</th></tr></thead><tbody>";
+  var place = 1;
+  t.results.forEach(function(g,gi){
+    g.forEach(function(p){
+      var net = (gi===0 ? t.pot/g.length : 0) - t.buyin;
+      h += "<tr><td"+(gi===0?" class='gold'":"")+">"+place+".</td><td>"+plink(p)+"</td><td class='"+cl(net)+"'>"+sg(net)+"</td></tr>";
+    });
+    place += g.length;
+  });
+  return h + "</tbody></table></div>";
+}
+function board(){
+  var h = "<h1>Žebříček</h1><p class='sub'>Klikni na hráče pro jeho statistiky.</p><h2>Pořadí</h2><div class='wrap'><table><thead><tr><th>#</th><th>Hráč</th><th>Výhry</th><th>Odehráno</th><th>Vyhráno</th><th>Bilance</th></tr></thead><tbody>";
+  rows.forEach(function(s){
+    h += "<tr><td>"+s.rank+".</td><td>"+plink(s.name)+"</td><td"+(s.wins?" class='gold'":"")+">"+s.wins+"</td><td>"+s.played+"</td><td>"+kc(s.won)+"</td><td class='"+cl(s.net)+"'>"+sg(s.net)+"</td></tr>";
+  });
+  if(!rows.length) h += "<tr><td class='empty' colspan='6'>Zatím žádné turnaje.</td></tr>";
+  return h + "</tbody></table></div><footer>Bilance = vyhráno minus vklady.</footer>";
+}
+function player(name){
+  var s = P[name]; if(!s) return board();
+  var h = "<a class='back' href='#/zebricek'>← Žebříček</a><h1>"+esc(s.name)+"</h1><p class='sub'>"+s.rank+". místo v žebříčku</p>"+
+   "<div class='grid'>"+
+   "<div><b>"+s.wins+"</b><span>výher</span></div>"+
+   "<div><b>"+s.played+"</b><span>odehraných turnajů</span></div>"+
+   "<div><b>"+s.best+". místo</b><span>nejlepší umístění</span></div>"+
+   "<div><b>"+Math.round(100*s.wins/s.played)+" %</b><span>úspěšnost (výhry)</span></div>"+
+   "<div><b>"+kc(s.won)+"</b><span>vyhráno celkem</span></div>"+
+   "<div><b>"+kc(s.spent)+"</b><span>vsazeno celkem</span></div>"+
+   "<div><b class='"+cl(s.net)+"'>"+sg(s.net)+"</b><span>celková bilance</span></div></div>"+
+   "<h2>Turnaje hráče</h2><div class='wrap'><table><thead><tr><th>Datum</th><th>Turnaj</th><th>Místo</th><th>Výsledek</th></tr></thead><tbody>";
+  s.log.slice().reverse().forEach(function(l){
+    h += "<tr><td>"+esc(new Date(l.t.date+"T12:00:00").toLocaleDateString("cs-CZ"))+"</td><td><a href='#/turnaj/"+l.t.id+"'>Detail</a></td><td>"+l.place+".</td><td class='"+cl(l.net)+"'>"+sg(l.net)+"</td></tr>";
+  });
+  return h + "</tbody></table></div>";
+}
+function route(){
+  var h = location.hash.replace(/^#\/?/,"").split("/"), v = h[0], a = h[1] ? decodeURIComponent(h[1]) : "";
+  var html = v==="turnaje" ? tournaments() : v==="turnaj" ? tournament(+a) : v==="zebricek" ? board() : v==="hrac" ? player(a) : home();
+  document.getElementById("app").innerHTML = html;
+  var on = {turnaje:"n-tur", turnaj:"n-tur", zebricek:"n-zeb", hrac:"n-zeb"}[v] || "n-home";
+  ["n-home","n-tur","n-zeb"].forEach(function(id){document.getElementById(id).className = id===on ? "on" : ""});
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", route);
+document.getElementById("splash").addEventListener("click", function(){this.style.display="none"});
+route();
 </script>
 </body>
 </html>
