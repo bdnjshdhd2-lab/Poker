@@ -71,10 +71,8 @@ td a{font-weight:600}
 .res p{margin:0;color:var(--mute)}
 .final{margin:0;padding-left:1.4em}
 .rules{margin-top:20px}
-.tbox{background:var(--card);border:1px solid var(--line);border-radius:10px}
-.tbox .wrap{border:0;background:none;border-radius:0}
-.corner{display:flex;justify-content:flex-end;padding:0 10px 10px}
-.secret{position:relative;width:26px;height:26px;border-radius:50%;border:0;padding:0;overflow:hidden;cursor:pointer;background:var(--line);color:var(--mute);font-weight:700;font-size:.8rem;opacity:.55}
+.corner{display:flex;justify-content:flex-end;margin-top:48px}
+.secret{position:relative;width:18px;height:18px;border-radius:50%;border:0;padding:0;overflow:hidden;cursor:pointer;background:var(--line);color:var(--mute);font-weight:700;font-size:.6rem;line-height:18px;opacity:.5}
 .secret:hover,.secret:focus-visible{opacity:1}
 .secret img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #lb{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:rgba(0,0,0,.88);cursor:pointer;padding:16px}
@@ -95,7 +93,7 @@ footer{margin-top:32px;color:var(--mute);font-size:.88rem}
   <nav><a href="#/" id="n-home">Přehled</a><a href="#/turnaje" id="n-tur">Turnaje</a><a href="#/zebricek" id="n-zeb">Žebříček</a><a href="#/3x3" id="n-3x3">3x3</a></nav>
 </header>
 <main id="app"></main>
-<div id="lb" role="dialog" aria-label="Vamooos"><img id="lbimg" alt=""></div>
+<div id="lb" role="dialog" aria-label="Vamooos"><img id="lbimg" alt="" data-i="0" data-set="vamos" onerror="imgNext(this)"></div>
 <script>
 // Nový turnaj přidej na konec tohoto seznamu. Každé umístění je seznam jmen (více jmen = sdílené místo).
 var TOURNAMENTS = [
@@ -145,7 +143,8 @@ function home(){
    "<div class='podium'>"+slot(atRank(2),"s2")+slot(atRank(1),"s1")+slot(atRank(3),"s3")+"</div>"+
    "<div class='stats'><div><b>"+TOURNAMENTS.length+"</b><span>"+(TOURNAMENTS.length===1?"turnaj":(TOURNAMENTS.length<5?"turnaje":"turnajů"))+"</span></div>"+
    "<div><b>"+rows.length+"</b><span>"+(rows.length===1?"hráč":(rows.length<5?"hráči":"hráčů"))+"</span></div>"+
-   "<div><b>"+kc(totalPot)+"</b><span>odehráno celkem</span></div></div>";
+   "<div><b>"+kc(totalPot)+"</b><span>odehráno celkem</span></div></div>"+
+   "<div class='corner'><button class='secret' type='button' aria-label='Tajné tlačítko' onclick='secret()'>?<img src='vamos-button.png' data-i='0' data-set='vamosbtn' alt='' onerror='imgNext(this)'></button></div>";
 }
 function tournaments(){
   var h = "<h1>Historie turnajů</h1><p class='sub'>Klikni na turnaj pro všechny detaily.</p><h2>Všechny turnaje</h2>";
@@ -158,7 +157,7 @@ function tournament(id){
   var t = TOURNAMENTS[id]; if(!t) return tournaments();
   var h = "<a class='back' href='#/turnaje'>← Všechny turnaje</a><h1>"+esc(dt(t.date))+"</h1>"+
    "<div class='grid'><div><b>"+t.n+"</b><span>hráčů</span></div><div><b>"+kc(t.buyin)+"</b><span>vklad</span></div><div><b>"+kc(t.pot)+"</b><span>bank</span></div></div>"+
-   "<h2>Výsledky</h2><div class='tbox'><div class='wrap'><table><thead><tr><th>Místo</th><th>Hráč</th><th>Výsledek</th></tr></thead><tbody>";
+   "<h2>Výsledky</h2><div class='wrap'><table><thead><tr><th>Místo</th><th>Hráč</th><th>Výsledek</th></tr></thead><tbody>";
   var place = 1;
   t.results.forEach(function(g,gi){
     g.forEach(function(p){
@@ -167,7 +166,7 @@ function tournament(id){
     });
     place += g.length;
   });
-  return h + "</tbody></table></div><div class='corner'><button class='secret' type='button' aria-label='Tajné tlačítko' onclick='secret()'>?<img src='vamos.jpg' data-i='0' data-set='vamos' alt='' onerror='imgNext(this)'></button></div></div>";
+  return h + "</tbody></table></div>";
 }
 function board(){
   var h = "<h1>Žebříček</h1><p class='sub'>Klikni na hráče pro jeho statistiky.</p><h2>Pořadí</h2><div class='wrap'><table><thead><tr><th>#</th><th>Hráč</th><th>Výhry</th><th>Odehráno</th><th>Vyhráno</th><th>Bilance</th></tr></thead><tbody>";
@@ -196,12 +195,14 @@ function player(name){
 }
 // Hra 3x3 (samostatná hra, hráči se NEPOČÍTAJÍ do žebříčku). Obrázek hry nahraj na GitHub pod názvem 3x3.png (nebo 3x3.jpg).
 var GAME_IMGS = ["3x3.png", "3x3.jpg"];
-// Tajné tlačítko: nahraj na GitHub obrázek vamos.jpg (nebo vamos.png) a zvuk vamos.mp3
-var IMGSETS = { game: GAME_IMGS, vamos: ["vamos.jpg", "vamos.png"] };
+// Tajné tlačítko: na GitHub nahraj malý obrázek tlačítka vamos-button.png (nebo .jpg), velký obrázek vamos.jpg (nebo .png) a zvuk vamos.mp3
+var IMGSETS = { game: GAME_IMGS, vamos: ["vamos.jpg", "vamos.png"], vamosbtn: ["vamos-button.png", "vamos-button.jpg", "vamos.jpg", "vamos.png"] };
 function imgNext(el){
   var set = el.getAttribute("data-set"), list = IMGSETS[set] || [], n = +el.getAttribute("data-i") + 1;
   if (n < list.length) { el.setAttribute("data-i", n); el.src = list[n]; }
-  else { if (set === "game") el.parentNode.className = "shot noimg"; el.remove(); }
+  else if (set === "game") { el.parentNode.className = "shot noimg"; el.remove(); }
+  else if (set === "vamos") { el.style.display = "none"; }
+  else { el.remove(); }
 }
 var vAudio = null;
 function speak(){
@@ -210,8 +211,8 @@ function speak(){
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 function secret(){
-  var s = document.querySelector(".secret img");
-  document.getElementById("lbimg").src = s ? s.getAttribute("src") : IMGSETS.vamos[0];
+  var big = document.getElementById("lbimg");
+  big.style.display = ""; big.setAttribute("data-i", "0"); big.src = IMGSETS.vamos[0];
   document.getElementById("lb").classList.add("open");
   try { vAudio = new Audio("vamos.mp3"); var p = vAudio.play(); if (p && p.catch) p.catch(speak); } catch(e) { speak(); }
 }
