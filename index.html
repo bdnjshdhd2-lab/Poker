@@ -37,7 +37,8 @@ main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
 .podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:36px 0 8px}
 .slot{flex:1;max-width:200px;text-align:center;text-decoration:none;display:block}
 .pn{font-weight:700;overflow-wrap:anywhere}
-.pm{color:var(--mute);font-size:.88rem;margin-bottom:6px}
+.pm{color:var(--mute);font-size:.88rem}
+.pl{display:block;text-decoration:none;margin-bottom:8px}
 .blk{display:grid;place-items:center;border-radius:10px 10px 0 0;background:var(--card);border:1px solid var(--line);border-bottom:0;font-family:Fraunces,Georgia,serif;font-weight:800;font-size:2.2rem}
 .s1 .blk{height:160px;background:var(--chip);color:var(--chipink);font-size:3rem}
 .s2 .blk{height:115px}.s3 .blk{height:85px}
@@ -70,6 +71,15 @@ td a{font-weight:600}
 .res p{margin:0;color:var(--mute)}
 .final{margin:0;padding-left:1.4em}
 .rules{margin-top:20px}
+.tbox{background:var(--card);border:1px solid var(--line);border-radius:10px}
+.tbox .wrap{border:0;background:none;border-radius:0}
+.corner{display:flex;justify-content:flex-end;padding:0 10px 10px}
+.secret{position:relative;width:26px;height:26px;border-radius:50%;border:0;padding:0;overflow:hidden;cursor:pointer;background:var(--line);color:var(--mute);font-weight:700;font-size:.8rem;opacity:.55}
+.secret:hover,.secret:focus-visible{opacity:1}
+.secret img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#lb{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:rgba(0,0,0,.88);cursor:pointer;padding:16px}
+#lb.open{display:grid}
+#lb img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
 .rules .final li{padding:5px 0}
 .final li{padding:2px 0}
 .thanks{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:12px 0 0}
@@ -85,6 +95,7 @@ footer{margin-top:32px;color:var(--mute);font-size:.88rem}
   <nav><a href="#/" id="n-home">Přehled</a><a href="#/turnaje" id="n-tur">Turnaje</a><a href="#/zebricek" id="n-zeb">Žebříček</a><a href="#/3x3" id="n-3x3">3x3</a></nav>
 </header>
 <main id="app"></main>
+<div id="lb" role="dialog" aria-label="Vamooos"><img id="lbimg" alt=""></div>
 <script>
 // Nový turnaj přidej na konec tohoto seznamu. Každé umístění je seznam jmen (více jmen = sdílené místo).
 var TOURNAMENTS = [
@@ -121,14 +132,17 @@ rows.sort(function(a,b){return b.wins-a.wins || b.net-a.net || a.best-b.best || 
 rows.forEach(function(s,i){var q=rows[i-1]; s.rank=(i&&q.wins===s.wins&&q.net===s.net&&q.best===s.best)?q.rank:i+1});
 var BUYIN = TOURNAMENTS.length ? TOURNAMENTS[TOURNAMENTS.length-1].buyin : 100;
 
-function slot(s,cls){
-  if(!s) return "<div class='slot "+cls+"'></div>";
-  return "<a class='slot "+cls+"' href='#/hrac/"+encodeURIComponent(s.name)+"'><div class='pn'>"+esc(s.name)+"</div><div class='pm'>"+pl(s.wins,"výhra","výhry","výher")+"</div><div class='blk'>"+s.rank+"</div></a>";
+function atRank(r){return rows.filter(function(s){return s.rank===r})}
+function slot(g,cls){
+  if(!g.length) return "<div class='slot "+cls+"'></div>";
+  return "<div class='slot "+cls+"'>"+g.map(function(s){
+    return "<a class='pl' href='#/hrac/"+encodeURIComponent(s.name)+"'><div class='pn'>"+esc(s.name)+"</div><div class='pm'>"+pl(s.wins,"výhra","výhry","výher")+"</div></a>";
+  }).join("")+"<div class='blk'>"+g[0].rank+"</div></div>";
 }
 function home(){
   if(!rows.length) return "<h1>Poker</h1><p class='empty'>Zatím žádné turnaje.</p>";
   return "<h1>Síň slávy</h1><p class='sub'>Vítěz bere vše. Vklad na turnaj "+kc(BUYIN)+".</p>"+
-   "<div class='podium'>"+slot(rows[1],"s2")+slot(rows[0],"s1")+slot(rows[2],"s3")+"</div>"+
+   "<div class='podium'>"+slot(atRank(2),"s2")+slot(atRank(1),"s1")+slot(atRank(3),"s3")+"</div>"+
    "<div class='stats'><div><b>"+TOURNAMENTS.length+"</b><span>"+(TOURNAMENTS.length===1?"turnaj":(TOURNAMENTS.length<5?"turnaje":"turnajů"))+"</span></div>"+
    "<div><b>"+rows.length+"</b><span>"+(rows.length===1?"hráč":(rows.length<5?"hráči":"hráčů"))+"</span></div>"+
    "<div><b>"+kc(totalPot)+"</b><span>odehráno celkem</span></div></div>";
@@ -144,7 +158,7 @@ function tournament(id){
   var t = TOURNAMENTS[id]; if(!t) return tournaments();
   var h = "<a class='back' href='#/turnaje'>← Všechny turnaje</a><h1>"+esc(dt(t.date))+"</h1>"+
    "<div class='grid'><div><b>"+t.n+"</b><span>hráčů</span></div><div><b>"+kc(t.buyin)+"</b><span>vklad</span></div><div><b>"+kc(t.pot)+"</b><span>bank</span></div></div>"+
-   "<h2>Výsledky</h2><div class='wrap'><table><thead><tr><th>Místo</th><th>Hráč</th><th>Výsledek</th></tr></thead><tbody>";
+   "<h2>Výsledky</h2><div class='tbox'><div class='wrap'><table><thead><tr><th>Místo</th><th>Hráč</th><th>Výsledek</th></tr></thead><tbody>";
   var place = 1;
   t.results.forEach(function(g,gi){
     g.forEach(function(p){
@@ -153,7 +167,7 @@ function tournament(id){
     });
     place += g.length;
   });
-  return h + "</tbody></table></div>";
+  return h + "</tbody></table></div><div class='corner'><button class='secret' type='button' aria-label='Tajné tlačítko' onclick='secret()'>?<img src='vamos.jpg' data-i='0' data-set='vamos' alt='' onerror='imgNext(this)'></button></div></div>";
 }
 function board(){
   var h = "<h1>Žebříček</h1><p class='sub'>Klikni na hráče pro jeho statistiky.</p><h2>Pořadí</h2><div class='wrap'><table><thead><tr><th>#</th><th>Hráč</th><th>Výhry</th><th>Odehráno</th><th>Vyhráno</th><th>Bilance</th></tr></thead><tbody>";
@@ -182,10 +196,29 @@ function player(name){
 }
 // Hra 3x3 (samostatná hra, hráči se NEPOČÍTAJÍ do žebříčku). Obrázek hry nahraj na GitHub pod názvem 3x3.png (nebo 3x3.jpg).
 var GAME_IMGS = ["3x3.png", "3x3.jpg"];
+// Tajné tlačítko: nahraj na GitHub obrázek vamos.jpg (nebo vamos.png) a zvuk vamos.mp3
+var IMGSETS = { game: GAME_IMGS, vamos: ["vamos.jpg", "vamos.png"] };
 function imgNext(el){
-  var n = +el.getAttribute("data-i") + 1;
-  if (n < GAME_IMGS.length) { el.setAttribute("data-i", n); el.src = GAME_IMGS[n]; }
-  else { el.parentNode.className = "shot noimg"; el.remove(); }
+  var set = el.getAttribute("data-set"), list = IMGSETS[set] || [], n = +el.getAttribute("data-i") + 1;
+  if (n < list.length) { el.setAttribute("data-i", n); el.src = list[n]; }
+  else { if (set === "game") el.parentNode.className = "shot noimg"; el.remove(); }
+}
+var vAudio = null;
+function speak(){
+  if (!window.speechSynthesis) return;
+  var u = new SpeechSynthesisUtterance("Vamooos!"); u.lang = "es-ES"; u.rate = .75;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function secret(){
+  var s = document.querySelector(".secret img");
+  document.getElementById("lbimg").src = s ? s.getAttribute("src") : IMGSETS.vamos[0];
+  document.getElementById("lb").classList.add("open");
+  try { vAudio = new Audio("vamos.mp3"); var p = vAudio.play(); if (p && p.catch) p.catch(speak); } catch(e) { speak(); }
+}
+function closeLb(){
+  document.getElementById("lb").classList.remove("open");
+  if (vAudio) { vAudio.pause(); vAudio.currentTime = 0; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
 }
 var GAME3 = [
   {name:"Mates", picks:["vylepšení Pošťáka Peta alkoholem","hydraulické kleště na klec","chromozom navíc pro Ondřeje"],
@@ -207,7 +240,7 @@ var RULES = [
 var SPONSORS = ["Papírny Brno","Restaurace U Kašpárka","SlinksClan","QuestHunt","Karbanátek s.r.o.","Sazka Loterie"];
 function game(){
   var h = "<h1>3x3</h1><section class='res rules'><h3>Pravidla hry</h3><ol class='final'>"+RULES.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ol></section>"+
-    "<figure class='shot'><img src='"+esc(GAME_IMGS[0])+"' data-i='0' alt='Obrázek hry 3x3' onerror='imgNext(this)'></figure>"+
+    "<figure class='shot'><img src='"+esc(GAME_IMGS[0])+"' data-i='0' data-set='game' alt='Obrázek hry 3x3' onerror='imgNext(this)'></figure>"+
     "<h2>Výsledky</h2>";
   GAME3.forEach(function(g,i){
     h += "<section class='res"+(i===0?" first":"")+"'><h3><span class='rk'>"+(i+1)+"</span>"+esc(g.name)+"</h3><ul class='picks'>"+
@@ -227,6 +260,8 @@ function route(){
   window.scrollTo(0,0);
 }
 window.addEventListener("hashchange", route);
+document.getElementById("lb").addEventListener("click", closeLb);
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeLb(); });
 document.getElementById("splash").addEventListener("click", function(){
   var el = this;
   el.classList.add("out");
