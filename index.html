@@ -69,6 +69,8 @@ td a{font-weight:600}
 .picks li{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.92rem}
 .res p{margin:0;color:var(--mute)}
 .final{margin:0;padding-left:1.4em}
+.rules{margin-top:20px}
+.rules .final li{padding:5px 0}
 .final li{padding:2px 0}
 .thanks{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:12px 0 0}
 .thanks li{background:var(--chip);color:var(--chipink);border-radius:8px;padding:6px 12px;font-weight:600;font-size:.92rem}
@@ -197,9 +199,14 @@ var GAME3 = [
   {name:"Kryštof", picks:["Mike Wazowski","Maxi pes Fík","Restaurace U Kašpárka"],
    note:"Solidní klasika, ale méně destruktivní energie než konkurence. Restaurace U Kašpárka je nicméně silný regionální partner."}
 ];
+var RULES = [
+  "Hrací plocha se skládá z 3 × 3 polí.",
+  "Tato hra nemá žádná předem stanovená pravidla. Pravidla si hráči vymýšlejí za pochodu během hry.",
+  "Hra končí ve chvíli, kdy hráče přestane bavit."
+];
 var SPONSORS = ["Papírny Brno","Restaurace U Kašpárka","SlinksClan","QuestHunt","Karbanátek s.r.o.","Sazka Loterie"];
 function game(){
-  var h = "<h1>3x3</h1><p class='sub'>Naše vlastní hra</p>"+
+  var h = "<h1>3x3</h1><section class='res rules'><h3>Pravidla hry</h3><ol class='final'>"+RULES.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ol></section>"+
     "<figure class='shot'><img src='"+esc(GAME_IMGS[0])+"' data-i='0' alt='Obrázek hry 3x3' onerror='imgNext(this)'></figure>"+
     "<h2>Výsledky</h2>";
   GAME3.forEach(function(g,i){
