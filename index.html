@@ -29,7 +29,7 @@ h2{font-size:1.3rem;font-weight:600;margin:32px 0 12px}
 @media (prefers-reduced-motion:reduce){#splash .hint{animation:none}}
 header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;max-width:760px;margin:0 auto;padding:16px 16px 0}
 .brand{font-family:Fraunces,Georgia,serif;font-weight:800;font-size:1.2rem;text-decoration:none}
-nav{display:flex;gap:4px}
+nav{display:flex;flex-wrap:wrap;gap:4px}
 nav a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--mute);font-weight:600}
 nav a.on{background:var(--chip);color:var(--chipink)}
 main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
@@ -57,6 +57,21 @@ td a{font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
 .grid div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
 .back{display:inline-block;margin-bottom:14px;color:var(--mute)}
+.shot{margin:20px 0 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.shot img{display:block;width:100%;height:auto}
+.shot.noimg{display:grid;place-items:center;min-height:200px;color:var(--mute);border-style:dashed}
+.shot.noimg::before{content:"Sem přijde obrázek hry"}
+.res{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.res.first{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.res h3{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-family:Fraunces,Georgia,serif;font-size:1.25rem}
+.rk{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--chip);color:var(--chipink);font-weight:800;font-size:1rem;flex:none}
+.picks{list-style:none;padding:0;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:6px}
+.picks li{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.92rem}
+.res p{margin:0;color:var(--mute)}
+.final{margin:0;padding-left:1.4em}
+.final li{padding:2px 0}
+.thanks{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:12px 0 0}
+.thanks li{background:var(--chip);color:var(--chipink);border-radius:8px;padding:6px 12px;font-weight:600;font-size:.92rem}
 .empty{color:var(--mute);padding:18px}
 footer{margin-top:32px;color:var(--mute);font-size:.88rem}
 </style>
@@ -65,7 +80,7 @@ footer{margin-top:32px;color:var(--mute);font-size:.88rem}
 <button id="splash" type="button"><span class="suits" aria-hidden="true">♠ ♥ ♦ ♣</span><span class="big">Poker</span><span class="hint">Klikni pro pokračování</span></button>
 <header>
   <a class="brand" href="#/">♠ Poker</a>
-  <nav><a href="#/" id="n-home">Přehled</a><a href="#/turnaje" id="n-tur">Turnaje</a><a href="#/zebricek" id="n-zeb">Žebříček</a></nav>
+  <nav><a href="#/" id="n-home">Přehled</a><a href="#/turnaje" id="n-tur">Turnaje</a><a href="#/zebricek" id="n-zeb">Žebříček</a><a href="#/3x3" id="n-3x3">3x3</a></nav>
 </header>
 <main id="app"></main>
 <script>
@@ -163,12 +178,45 @@ function player(name){
   });
   return h + "</tbody></table></div>";
 }
+// Hra 3x3 (samostatná hra, hráči se NEPOČÍTAJÍ do žebříčku). Obrázek hry nahraj na GitHub pod názvem 3x3.png (nebo 3x3.jpg).
+var GAME_IMGS = ["3x3.png", "3x3.jpg"];
+function imgNext(el){
+  var n = +el.getAttribute("data-i") + 1;
+  if (n < GAME_IMGS.length) { el.setAttribute("data-i", n); el.src = GAME_IMGS[n]; }
+  else { el.parentNode.className = "shot noimg"; el.remove(); }
+}
+var GAME3 = [
+  {name:"Mates", picks:["vylepšení Pošťáka Peta alkoholem","hydraulické kleště na klec","chromozom navíc pro Ondřeje"],
+   note:"Extrémně silná kombinace. Má příběh, technické řešení problému (klec) i biologický upgrade. Velmi konzistentní chaos."},
+  {name:"David", picks:["žížalací s mobilní kotelnou","Pošťák Pet","Braník 6× 2L"],
+   note:"Mobilní kotelna + Braník multipack je silný český engineering vibe. Pošťák Pet navíc funguje jako univerzální meme spojka."},
+  {name:"Vojta", picks:["Grenny","Piggy","zavření páva do klece"],
+   note:"Páv v kleci je kvalitní payoff a navazuje na dění v koláži. Body za tematickou soudržnost."},
+  {name:"Kuba", picks:["Jan Neruda","sraženky pro Pošťáka Peta","Heartsteel na džus"],
+   note:"Velmi kulturně-literární vstup, ale proti alkoholizovanému Pošťákovi Petovi a mobilní kotelně je to těžký boj."},
+  {name:"Kryštof", picks:["Mike Wazowski","Maxi pes Fík","Restaurace U Kašpárka"],
+   note:"Solidní klasika, ale méně destruktivní energie než konkurence. Restaurace U Kašpárka je nicméně silný regionální partner."}
+];
+var SPONSORS = ["Papírny Brno","Restaurace U Kašpárka","SlinksClan","QuestHunt","Karbanátek s.r.o.","Sazka Loterie"];
+function game(){
+  var h = "<h1>3x3</h1><p class='sub'>Naše vlastní hra</p>"+
+    "<figure class='shot'><img src='"+esc(GAME_IMGS[0])+"' data-i='0' alt='Obrázek hry 3x3' onerror='imgNext(this)'></figure>"+
+    "<h2>Výsledky</h2>";
+  GAME3.forEach(function(g,i){
+    h += "<section class='res"+(i===0?" first":"")+"'><h3><span class='rk'>"+(i+1)+"</span>"+esc(g.name)+"</h3><ul class='picks'>"+
+      g.picks.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ul><p>"+esc(g.note)+"</p></section>";
+  });
+  h += "<h2>Konečné pořadí</h2><div class='res'><ol class='final'>"+GAME3.map(function(g){return "<li>"+esc(g.name)+"</li>"}).join("")+"</ol></div>"+
+    "<h2>Poděkování sponzorům</h2><div class='res'><p>Tato soutěž by nebyla možná bez podpory:</p><ul class='thanks'>"+
+    SPONSORS.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ul></div>";
+  return h;
+}
 function route(){
   var h = location.hash.replace(/^#\/?/,"").split("/"), v = h[0], a = h[1] ? decodeURIComponent(h[1]) : "";
-  var html = v==="turnaje" ? tournaments() : v==="turnaj" ? tournament(+a) : v==="zebricek" ? board() : v==="hrac" ? player(a) : home();
+  var html = v==="turnaje" ? tournaments() : v==="turnaj" ? tournament(+a) : v==="zebricek" ? board() : v==="3x3" ? game() : v==="hrac" ? player(a) : home();
   document.getElementById("app").innerHTML = html;
-  var on = {turnaje:"n-tur", turnaj:"n-tur", zebricek:"n-zeb", hrac:"n-zeb"}[v] || "n-home";
-  ["n-home","n-tur","n-zeb"].forEach(function(id){document.getElementById(id).className = id===on ? "on" : ""});
+  var on = {turnaje:"n-tur", turnaj:"n-tur", zebricek:"n-zeb", hrac:"n-zeb", "3x3":"n-3x3"}[v] || "n-home";
+  ["n-home","n-tur","n-zeb","n-3x3"].forEach(function(id){document.getElementById(id).className = id===on ? "on" : ""});
   window.scrollTo(0,0);
 }
 window.addEventListener("hashchange", route);
