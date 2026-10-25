@@ -46,7 +46,7 @@ main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
 .stats b,.grid b{font-family:Fraunces,Georgia,serif;font-size:1.5rem;font-weight:800;display:block;line-height:1.15}
 .stats span,.grid span{color:var(--mute);font-size:.9rem}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
-table{border-collapse:collapse;width:100%;min-width:460px}
+table{border-collapse:collapse;width:100%;min-width:560px}
 th,td{padding:12px 14px;text-align:right;white-space:nowrap}
 th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
 th{font-weight:600;font-size:.85rem;color:var(--mute);border-bottom:1px solid var(--line)}
@@ -71,6 +71,9 @@ td a{font-weight:600}
 .res p{margin:0;color:var(--mute)}
 .final{margin:0;padding-left:1.4em}
 .rules{margin-top:20px}
+.sorts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.sorts button{font:inherit;font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.sorts button[aria-pressed="true"]{background:var(--chip);color:var(--chipink);border-color:var(--chip)}
 .corner{display:flex;justify-content:flex-end;margin-top:48px}
 .secret{position:relative;width:18px;height:18px;border-radius:50%;border:0;padding:0;overflow:hidden;cursor:pointer;background:var(--line);color:var(--mute);font-weight:700;font-size:.6rem;line-height:18px;opacity:.5}
 .secret:hover,.secret:focus-visible{opacity:1}
@@ -96,8 +99,12 @@ footer{margin-top:32px;color:var(--mute);font-size:.88rem}
 <div id="lb" role="dialog" aria-label="Vamooos"><img id="lbimg" alt="" data-i="0" data-set="vamos" onerror="imgNext(this)"></div>
 <script>
 // Nový turnaj přidej na konec tohoto seznamu. Každé umístění je seznam jmen (více jmen = sdílené místo).
+// Když někdo vsadil jinou částku než základní vklad (buyin), napiš ji do "spent".
 var TOURNAMENTS = [
-  { date: "2026-10-03", buyin: 100, results: [["Ríša"], ["Zdena"], ["Kuba", "David"]] }
+  { date: "2026-10-03", buyin: 100, results: [["Ríša"], ["Zdena"], ["Kuba", "David"]] },
+  { date: "2026-10-24", buyin: 100,
+    spent: { "Ríša": 100, "Kuba": 100, "Zdena": 100, "Vojta": 150, "David": 100, "Mates": 150 },
+    results: [["Ríša"], ["Kuba"], ["Zdena"], ["Vojta"], ["David"], ["Mates"]] }
 ];
 
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -108,19 +115,20 @@ function pl(n,a,b,c){return n+"\u00a0"+(n===1?a:(n>=2&&n<=4)?b:c)}
 function dt(d){return new Date(d+"T12:00:00").toLocaleDateString("cs-CZ",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
 function plink(n){return "<a href='#/hrac/"+encodeURIComponent(n)+"'>"+esc(n)+"</a>"}
 
+function sp(t,p){return (t.spent && t.spent[p]!=null) ? t.spent[p] : t.buyin}
 var P = {}, totalPot = 0;
 TOURNAMENTS.forEach(function(t,i){
   var all = [].concat.apply([], t.results);
-  t.id = i; t.n = all.length; t.pot = t.n * t.buyin; totalPot += t.pot;
+  t.id = i; t.n = all.length; t.pot = all.reduce(function(a,p){return a+sp(t,p)},0); totalPot += t.pot;
   var place = 1;
   t.results.forEach(function(g,gi){
     g.forEach(function(p){
       var won = gi===0 ? t.pot/g.length : 0;
-      var s = P[p] || (P[p] = {name:p, played:0, wins:0, won:0, spent:0, best:99, log:[]});
-      s.played++; s.spent += t.buyin; s.won += won;
+      var s = P[p] || (P[p] = {name:p, played:0, wins:0, won:0, spent:0, best:99, psum:0, log:[]});
+      s.played++; s.spent += sp(t,p); s.won += won; s.psum += place;
       if (gi===0) s.wins++;
       if (place < s.best) s.best = place;
-      s.log.push({t:t, place:place, net:won-t.buyin});
+      s.log.push({t:t, place:place, net:won-sp(t,p)});
     });
     place += g.length;
   });
@@ -128,18 +136,36 @@ TOURNAMENTS.forEach(function(t,i){
 var rows = Object.keys(P).map(function(k){var s=P[k]; s.net=s.won-s.spent; return s});
 rows.sort(function(a,b){return b.wins-a.wins || b.net-a.net || a.best-b.best || a.name.localeCompare(b.name,"cs")});
 rows.forEach(function(s,i){var q=rows[i-1]; s.rank=(i&&q.wins===s.wins&&q.net===s.net&&q.best===s.best)?q.rank:i+1});
+function f1(n){return n.toLocaleString("cs-CZ",{minimumFractionDigits:1,maximumFractionDigits:1})}
+rows.forEach(function(s){s.avg = s.psum/s.played});
+var CMP = {
+  wins: function(a,b){return b.wins-a.wins || b.net-a.net || a.best-b.best},
+  won:  function(a,b){return b.won-a.won || b.wins-a.wins || b.net-a.net},
+  avg:  function(a,b){return a.avg-b.avg || b.wins-a.wins || b.net-a.net || a.best-b.best}
+};
+var sortKey = "wins";
+function ordered(key){
+  var c = CMP[key], pos = 0;
+  var r = rows.slice().sort(function(a,b){return c(a,b) || a.name.localeCompare(b.name,"cs")});
+  r.forEach(function(s,i){ if(!i || c(r[i-1],s)!==0) pos = i+1; s.pos = pos; });
+  return r;
+}
+(function(){ // stupně vítězů: podle průměrného umístění, shodní hráči sdílejí stupínek
+  var r = rows.slice().sort(CMP.avg), pr = 0;
+  r.forEach(function(s,i){ if(!i || CMP.avg(r[i-1],s)!==0) pr++; s.prank = pr; });
+})();
 var BUYIN = TOURNAMENTS.length ? TOURNAMENTS[TOURNAMENTS.length-1].buyin : 100;
 
-function atRank(r){return rows.filter(function(s){return s.rank===r})}
+function atRank(r){return rows.filter(function(s){return s.prank===r})}
 function slot(g,cls){
   if(!g.length) return "<div class='slot "+cls+"'></div>";
   return "<div class='slot "+cls+"'>"+g.map(function(s){
-    return "<a class='pl' href='#/hrac/"+encodeURIComponent(s.name)+"'><div class='pn'>"+esc(s.name)+"</div><div class='pm'>"+pl(s.wins,"výhra","výhry","výher")+"</div></a>";
-  }).join("")+"<div class='blk'>"+g[0].rank+"</div></div>";
+    return "<a class='pl' href='#/hrac/"+encodeURIComponent(s.name)+"'><div class='pn'>"+esc(s.name)+"</div><div class='pm'>průměr "+f1(s.avg)+"</div></a>";
+  }).join("")+"<div class='blk'>"+g[0].prank+"</div></div>";
 }
 function home(){
   if(!rows.length) return "<h1>Poker</h1><p class='empty'>Zatím žádné turnaje.</p>";
-  return "<h1>Síň slávy</h1><p class='sub'>Vítěz bere vše. Vklad na turnaj "+kc(BUYIN)+".</p>"+
+  return "<h1>Síň slávy</h1><p class='sub'>Vítěz bere vše. Vklad na turnaj "+kc(BUYIN)+". Stupně vítězů podle průměrného umístění.</p>"+
    "<div class='podium'>"+slot(atRank(2),"s2")+slot(atRank(1),"s1")+slot(atRank(3),"s3")+"</div>"+
    "<div class='stats'><div><b>"+TOURNAMENTS.length+"</b><span>"+(TOURNAMENTS.length===1?"turnaj":(TOURNAMENTS.length<5?"turnaje":"turnajů"))+"</span></div>"+
    "<div><b>"+rows.length+"</b><span>"+(rows.length===1?"hráč":(rows.length<5?"hráči":"hráčů"))+"</span></div>"+
@@ -156,25 +182,28 @@ function tournaments(){
 function tournament(id){
   var t = TOURNAMENTS[id]; if(!t) return tournaments();
   var h = "<a class='back' href='#/turnaje'>← Všechny turnaje</a><h1>"+esc(dt(t.date))+"</h1>"+
-   "<div class='grid'><div><b>"+t.n+"</b><span>hráčů</span></div><div><b>"+kc(t.buyin)+"</b><span>vklad</span></div><div><b>"+kc(t.pot)+"</b><span>bank</span></div></div>"+
-   "<h2>Výsledky</h2><div class='wrap'><table><thead><tr><th>Místo</th><th>Hráč</th><th>Výsledek</th></tr></thead><tbody>";
+   "<div class='grid'><div><b>"+t.n+"</b><span>hráčů</span></div><div><b>"+kc(t.buyin)+"</b><span>základní vklad</span></div><div><b>"+kc(t.pot)+"</b><span>bank</span></div></div>"+
+   "<h2>Výsledky</h2><div class='wrap'><table><thead><tr><th>Místo</th><th>Hráč</th><th>Vklad</th><th>Výsledek</th></tr></thead><tbody>";
   var place = 1;
   t.results.forEach(function(g,gi){
     g.forEach(function(p){
-      var net = (gi===0 ? t.pot/g.length : 0) - t.buyin;
-      h += "<tr><td"+(gi===0?" class='gold'":"")+">"+place+".</td><td>"+plink(p)+"</td><td class='"+cl(net)+"'>"+sg(net)+"</td></tr>";
+      var net = (gi===0 ? t.pot/g.length : 0) - sp(t,p);
+      h += "<tr><td"+(gi===0?" class='gold'":"")+">"+place+".</td><td>"+plink(p)+"</td><td>"+kc(sp(t,p))+"</td><td class='"+cl(net)+"'>"+sg(net)+"</td></tr>";
     });
     place += g.length;
   });
   return h + "</tbody></table></div>";
 }
 function board(){
-  var h = "<h1>Žebříček</h1><p class='sub'>Klikni na hráče pro jeho statistiky.</p><h2>Pořadí</h2><div class='wrap'><table><thead><tr><th>#</th><th>Hráč</th><th>Výhry</th><th>Odehráno</th><th>Vyhráno</th><th>Bilance</th></tr></thead><tbody>";
-  rows.forEach(function(s){
-    h += "<tr><td>"+s.rank+".</td><td>"+plink(s.name)+"</td><td"+(s.wins?" class='gold'":"")+">"+s.wins+"</td><td>"+s.played+"</td><td>"+kc(s.won)+"</td><td class='"+cl(s.net)+"'>"+sg(s.net)+"</td></tr>";
+  var opts = [["wins","Nejvíc výher"],["won","Nejvíc vyhráno"],["avg","Průměrné umístění"]];
+  var h = "<h1>Žebříček</h1><p class='sub'>Klikni na hráče pro jeho statistiky.</p><h2>Pořadí</h2><div class='sorts' role='group' aria-label='Řazení'>"+
+    opts.map(function(o){return "<button type='button' data-k='"+o[0]+"' aria-pressed='"+(sortKey===o[0])+"'>"+o[1]+"</button>"}).join("")+
+    "</div><div class='wrap'><table><thead><tr><th>#</th><th>Hráč</th><th>Výhry</th><th>Odehráno</th><th>Ø místo</th><th>Vyhráno</th><th>Bilance</th></tr></thead><tbody>";
+  ordered(sortKey).forEach(function(s){
+    h += "<tr><td>"+s.pos+".</td><td>"+plink(s.name)+"</td><td"+(s.wins?" class='gold'":"")+">"+s.wins+"</td><td>"+s.played+"</td><td>"+f1(s.avg)+"</td><td>"+kc(s.won)+"</td><td class='"+cl(s.net)+"'>"+sg(s.net)+"</td></tr>";
   });
-  if(!rows.length) h += "<tr><td class='empty' colspan='6'>Zatím žádné turnaje.</td></tr>";
-  return h + "</tbody></table></div><footer>Bilance = vyhráno minus vklady.</footer>";
+  if(!rows.length) h += "<tr><td class='empty' colspan='7'>Zatím žádné turnaje.</td></tr>";
+  return h + "</tbody></table></div><footer>Ø místo = průměrné umístění (nižší je lepší). Bilance = vyhráno minus vklady.</footer>";
 }
 function player(name){
   var s = P[name]; if(!s) return board();
@@ -183,6 +212,7 @@ function player(name){
    "<div><b>"+s.wins+"</b><span>výher</span></div>"+
    "<div><b>"+s.played+"</b><span>odehraných turnajů</span></div>"+
    "<div><b>"+s.best+". místo</b><span>nejlepší umístění</span></div>"+
+   "<div><b>"+f1(s.avg)+"</b><span>průměrné umístění</span></div>"+
    "<div><b>"+Math.round(100*s.wins/s.played)+" %</b><span>úspěšnost (výhry)</span></div>"+
    "<div><b>"+kc(s.won)+"</b><span>vyhráno celkem</span></div>"+
    "<div><b>"+kc(s.spent)+"</b><span>vsazeno celkem</span></div>"+
@@ -252,15 +282,19 @@ function game(){
     SPONSORS.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ul></div>";
   return h;
 }
-function route(){
+function route(keep){
   var h = location.hash.replace(/^#\/?/,"").split("/"), v = h[0], a = h[1] ? decodeURIComponent(h[1]) : "";
   var html = v==="turnaje" ? tournaments() : v==="turnaj" ? tournament(+a) : v==="zebricek" ? board() : v==="3x3" ? game() : v==="hrac" ? player(a) : home();
   document.getElementById("app").innerHTML = html;
   var on = {turnaje:"n-tur", turnaj:"n-tur", zebricek:"n-zeb", hrac:"n-zeb", "3x3":"n-3x3"}[v] || "n-home";
   ["n-home","n-tur","n-zeb","n-3x3"].forEach(function(id){document.getElementById(id).className = id===on ? "on" : ""});
-  window.scrollTo(0,0);
+  if (keep !== true) window.scrollTo(0,0);
 }
 window.addEventListener("hashchange", route);
+document.getElementById("app").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("[data-k]") : null;
+  if (b) { sortKey = b.getAttribute("data-k"); route(true); }
+});
 document.getElementById("lb").addEventListener("click", closeLb);
 document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeLb(); });
 document.getElementById("splash").addEventListener("click", function(){
