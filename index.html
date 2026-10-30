@@ -226,11 +226,11 @@ function player(name){
 // Hra 3x3 (samostatná hra, hráči se NEPOČÍTAJÍ do žebříčku). Obrázek hry nahraj na GitHub pod názvem 3x3.png (nebo 3x3.jpg).
 var GAME_IMGS = ["3x3.png", "3x3.jpg"];
 // Tajné tlačítko: na GitHub nahraj malý obrázek tlačítka vamos-button.png (nebo .jpg), velký obrázek vamos.jpg (nebo .png) a zvuk vamos.mp3
-var IMGSETS = { game: GAME_IMGS, vamos: ["vamos.jpg", "vamos.png"], vamosbtn: ["vamos-button.png", "vamos-button.jpg", "vamos.jpg", "vamos.png"] };
+var IMGSETS = { game: GAME_IMGS, vamos: ["vamos.jpg", "vamos.png"], vamosbtn: ["vamos-button.png", "vamos-button.jpg", "vamos.jpg", "vamos.png"], friendly: ["3x3-pratelsky.png", "3x3-pratelsky.jpg"] };
 function imgNext(el){
   var set = el.getAttribute("data-set"), list = IMGSETS[set] || [], n = +el.getAttribute("data-i") + 1;
   if (n < list.length) { el.setAttribute("data-i", n); el.src = list[n]; }
-  else if (set === "game") { el.parentNode.className = "shot noimg"; el.remove(); }
+  else if (set === "game" || set === "friendly") { el.parentNode.className = "shot noimg"; el.remove(); }
   else if (set === "vamos") { el.style.display = "none"; }
   else { el.remove(); }
 }
@@ -268,6 +268,8 @@ var RULES = [
   "Tato hra nemá žádná předem stanovená pravidla. Pravidla si hráči vymýšlejí za pochodu během hry.",
   "Hra končí ve chvíli, kdy hráče přestane bavit."
 ];
+// Přátelský turnaj 3x3: jen fotka (nahraj 3x3-pratelsky.png nebo .jpg), bez vítěze
+var FRIENDLY = { players: ["Kuba", "Mates", "Kryštof"], sponsors: ["Betano", "Kozel", "Svět masáží TikTok"] };
 var SPONSORS = ["Papírny Brno","Restaurace U Kašpárka","SlinksClan","QuestHunt","Karbanátek s.r.o.","Sazka Loterie"];
 function game(){
   var h = "<h1>3x3</h1><section class='res rules'><h3>Pravidla hry</h3><ol class='final'>"+RULES.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ol></section>"+
@@ -280,6 +282,12 @@ function game(){
   h += "<h2>Konečné pořadí</h2><div class='res'><ol class='final'>"+GAME3.map(function(g){return "<li>"+esc(g.name)+"</li>"}).join("")+"</ol></div>"+
     "<h2>Poděkování sponzorům</h2><div class='res'><p>Tato soutěž by nebyla možná bez podpory:</p><ul class='thanks'>"+
     SPONSORS.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ul></div>";
+  h += "<h2>Přátelský turnaj</h2>"+
+    "<figure class='shot' style='margin-top:0'><img src='"+esc(IMGSETS.friendly[0])+"' data-i='0' data-set='friendly' alt='Fotka přátelského turnaje 3x3' onerror='imgNext(this)'></figure>"+
+    "<div class='res' style='margin-top:12px'><p><b>Hráči</b></p><ul class='picks' style='margin-top:8px'>"+
+    FRIENDLY.players.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ul><p>Přátelský zápas, nikdo nevyhrál.</p></div>"+
+    "<div class='res'><p>Sponzoři přátelského turnaje:</p><ul class='thanks'>"+
+    FRIENDLY.sponsors.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ul></div>";
   return h;
 }
 function route(keep){
